@@ -6,7 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
-# DS_Store file
+# PyRight stuff
+dashboard/pyproject.toml
+
+# DS_Store stuff
 .DS_Store
 
 # Distribution / packaging
