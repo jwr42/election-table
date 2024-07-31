@@ -8,11 +8,11 @@ from shiny.ui import input_checkbox
 # import data from shared
 from shared import app_dir, df
 
-ui.page_opts(title="🗳️ UK General Election Results", fillable=True)
+ui.page_opts(title="UK General Election Results", fillable=True)
 
 with ui.sidebar(title="Filter Controls"):
     ui.input_checkbox_group(
-        "select_year",
+        "select_date",
         "",
         {
             "2024-07-04": "July 2024",
@@ -27,6 +27,13 @@ with ui.sidebar(title="Filter Controls"):
         "Select Constituencies",
         {i: i for i in df["Constituency name"].unique().tolist()},
         multiple=True,
+    )
+    ui.input_slider(
+        "select_result_position",
+        "Result Position",
+        min=1,
+        max=df["Candidate result position"].max(),
+        value=max,
     )
     ui.input_switch("select_speaker", "Include Speaker", value=True)
 
@@ -126,8 +133,10 @@ def filtered_df():
     # filter using conditions in sidebar
     if input.select_speaker() != True:
         filt_df = filt_df[filt_df["Speaker"] != "Yes"]
-
-    # filt_df = filt_df[filt_df["Polling Day"].isin(input.select_date())]
+    filt_df = filt_df[filt_df["Polling Day"].isin(input.select_date())]
+    if input.select_constituencies() != ():
+        filt_df = filt_df[filt_df["Constituency"].isin(input.select_constituencies())]
+    filt_df = filt_df[filt_df["Result Position"] <= input.select_result_position()]
 
     # filt_df = filt_df[filt_df["Candidate is standing as Commons Speaker"].isin(input.commons_speaker())]
     return filt_df
