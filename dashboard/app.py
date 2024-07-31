@@ -11,6 +11,7 @@ from shared import app_dir, df
 ui.page_opts(title="UK General Election Results", fillable=True)
 
 with ui.sidebar(title="Filter Controls"):
+    # Sidebar selection for the last four general elections
     ui.input_checkbox_group(
         "select_date",
         "",
@@ -20,7 +21,7 @@ with ui.sidebar(title="Filter Controls"):
             "2017-06-08": "June 2017",
             "2015-05-07": "May 2015",
         },
-        selected=["2024-07-04", "2019-12-12", "2017-06-08", "2015-05-07"],
+        selected=["2024-07-04"],
     )
     ui.input_selectize(
         "select_constituencies",
@@ -33,7 +34,21 @@ with ui.sidebar(title="Filter Controls"):
         "Result Position",
         min=1,
         max=df["Candidate result position"].max(),
-        value=max,
+        value=df["Candidate result position"].max(),
+    )
+    ui.input_selectize(
+        "select_parties",
+        "Select Parties",
+        {
+            "Lab": "Labour",
+            "Con": "Conservatives",
+            "LD": "Liberal Democrats",
+            "Green": "Green",
+            "RUK": "Reform UK",
+            "SNP": "Scottish National Party",
+            "PC": "Plaid Cymru",
+        },
+        multiple=True,
     )
     ui.input_switch("select_speaker", "Include Speaker", value=True)
 
@@ -131,12 +146,14 @@ def filtered_df():
     filt_df["Speaker"] = filt_df["Speaker"].replace({True: "Yes", False: ""})
 
     # filter using conditions in sidebar
-    if input.select_speaker() != True:
-        filt_df = filt_df[filt_df["Speaker"] != "Yes"]
     filt_df = filt_df[filt_df["Polling Day"].isin(input.select_date())]
     if input.select_constituencies() != ():
         filt_df = filt_df[filt_df["Constituency"].isin(input.select_constituencies())]
-    filt_df = filt_df[filt_df["Result Position"] <= input.select_result_position()]
+    filt_df = filt_df[filt_df["Position"] <= input.select_result_position()]
+    if input.select_parties() != ():
+        filt_df = filt_df[filt_df["Party"].isin(input.select_parties())]
+    if input.select_speaker() != True:
+        filt_df = filt_df[filt_df["Speaker"] != "Yes"]
 
     # filt_df = filt_df[filt_df["Candidate is standing as Commons Speaker"].isin(input.commons_speaker())]
     return filt_df
