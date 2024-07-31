@@ -3,12 +3,13 @@ from faicons import icon_svg
 from shiny import reactive
 from shiny.express import input, render, ui
 import pandas as pd
-from shiny.ui import input_checkbox
+from shiny.ui import input_checkbox, markdown
+import io
 
 # import data from shared
 from shared import app_dir, df
 
-ui.page_opts(title="UK General Election Results", fillable=True)
+ui.page_opts(title="UK General Election Results Explorer", fillable=True)
 
 with ui.sidebar(title="Filter Controls"):
     # Sidebar selection for the last four general elections
@@ -51,6 +52,25 @@ with ui.sidebar(title="Filter Controls"):
         multiple=True,
     )
     ui.input_switch("select_speaker", "Include Speaker", value=True)
+
+    @render.download(label="Download Table", filename="election_results.csv")
+    def download():
+        with io.BytesIO() as buf:
+            cols = [
+                "Polling Day",
+                "Constituency",
+                "Position",
+                "Surname",
+                "First Name",
+                "Party",
+                "Vote Count",
+                "Vote Share (%)",
+                "Majority",
+            ]
+            filtered_df()[cols].to_csv(buf)
+            yield buf.getvalue()
+
+    ui.markdown("[Data Source](https://electionresults.parliament.uk)")
 
 
 with ui.layout_column_wrap(fill=False):
