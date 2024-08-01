@@ -9,7 +9,7 @@ import io
 # import data from shared
 from shared import app_dir, df
 
-ui.page_opts(title="UK General Election Results Explorer", fillable=True)
+ui.page_opts(title="UK General Election Candidate Results", fillable=True)
 
 with ui.sidebar(title="Filter Controls"):
     # Sidebar selection for the last four general elections
@@ -32,7 +32,7 @@ with ui.sidebar(title="Filter Controls"):
     )
     ui.input_slider(
         "select_result_position",
-        "Result Position",
+        "Result Positions",
         min=1,
         max=df["Candidate result position"].max(),
         value=df["Candidate result position"].max(),
@@ -70,22 +70,20 @@ with ui.sidebar(title="Filter Controls"):
             filtered_df()[cols].to_csv(buf)
             yield buf.getvalue()
 
-    ui.markdown("[Data Source](https://electionresults.parliament.uk)")
+    ui.markdown("Data Source: [parliament.uk](https://electionresults.parliament.uk)")
 
 
 with ui.layout_column_wrap(fill=False):
     with ui.value_box(showcase=icon_svg("people-group"), theme="text-black"):
-        "Electorate, July 2024"
+        "Candidates, July 2024"
 
         @render.text
         def electorate():
-            result = df[df["General election polling date"] == "2024-07-04"][
-                "Total electorate in general election"
-            ].max()
+            result = len(df[df["General election polling date"] == "2024-07-04"])
             return f"{result:,d}"
 
     with ui.value_box(showcase=icon_svg("check-to-slot"), theme="text-black"):
-        "Voters, July 2024"
+        "Ballots Cast, July 2024"
 
         @render.text
         def voters():
@@ -112,14 +110,14 @@ with ui.layout_columns():
         @render.data_frame
         def table():
             cols = [
-                "Polling Day",
-                "Constituency",
-                "Position",
                 "Surname",
                 "First Name",
+                "Constituency",
                 "Party",
+                "Polling Day",
                 "Vote Count",
                 "Vote Share (%)",
+                "Position",
                 "Majority",
             ]
             return render.DataGrid(filtered_df()[cols])
@@ -146,14 +144,14 @@ def filtered_df():
         ]
     ].rename(
         columns={
-            "General election polling date": "Polling Day",
+            "Candidate given name": "First Name",
+            "Candidate family name": "Surname",
             "Constituency name": "Constituency",
+            "Main party abbreviation": "Party",
+            "General election polling date": "Polling Day",
+            "Candidate vote count": "Vote Count",
             "Candidate result position": "Position",
             "Majority": "Majority",
-            "Candidate family name": "Surname",
-            "Candidate given name": "First Name",
-            "Main party abbreviation": "Party",
-            "Candidate vote count": "Vote Count",
             "Candidate vote share": "Vote Share (%)",
             "Candidate is standing as Commons Speaker": "Speaker",
         }
